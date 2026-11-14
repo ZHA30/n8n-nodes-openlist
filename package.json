@@ -1,0 +1,43 @@
+{
+  "name": "n8n-nodes-openlist",
+  "version": "0.1.0",
+  "description": "Work with OpenList files and folders in n8n",
+  "license": "MIT",
+  "keywords": [
+    "n8n-community-node-package",
+    "openlist"
+  ],
+  "files": [
+    "dist",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "n8n-node build",
+    "dev": "n8n-node dev",
+    "lint": "n8n-node lint",
+    "test": "npm run build && node --test tests/*.test.cjs"
+  },
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "strict": false,
+    "credentials": [
+      "dist/credentials/OpenListApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/OpenList/OpenList.node.js"
+    ]
+  },
+  "devDependencies": {
+    "@n8n/node-cli": "0.56.1",
+    "@types/node": "^22.0.0",
+    "n8n-workflow": "2.47.0",
+    "typescript": "~5.9.3"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  }
+}
