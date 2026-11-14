@@ -7,7 +7,7 @@ const pkg = JSON.parse(
 const tag = process.env.RELEASE_TAG;
 assert.match(tag ?? "", /^v\d+\.\d+\.\d+$/u, "Use a stable vX.Y.Z version tag");
 assert.equal(tag, `v${pkg.version}`, "Tag must match package.json version");
-assert.equal(pkg.name, "@zha30/n8n-nodes-openlist");
+assert.equal(pkg.name, "@zha303050/n8n-nodes-openlist");
 assert.equal(pkg.publishConfig.access, "public");
 assert.equal(pkg.publishConfig.registry, "https://registry.npmjs.org/");
 assert.equal(

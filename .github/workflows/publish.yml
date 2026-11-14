@@ -53,9 +53,9 @@ jobs:
           name: release-package
           path: ${{ steps.pack.outputs.file }}
           if-no-files-found: error
-      - name: Publish with provenance
+      - name: Stage package with provenance
         if: steps.registry.outputs.exists != 'true'
         env:
           PACKAGE_FILE: ${{ steps.pack.outputs.file }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish "$PACKAGE_FILE" --access public --provenance
+        run: npm stage publish "$PACKAGE_FILE" --access public --provenance

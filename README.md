@@ -1,4 +1,4 @@
-# @zha30/n8n-nodes-openlist
+# @zha303050/n8n-nodes-openlist
 
 Manage OpenList files and folders in n8n.
 
