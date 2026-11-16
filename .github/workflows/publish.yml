@@ -2,13 +2,7 @@ name: Publish
 
 on:
   push:
-    tags: ["v*.*.*"]
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: Existing version tag to publish
-        required: true
-        type: string
+    tags: ['v*.*.*']
 
 permissions:
   contents: read
@@ -26,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          ref: refs/tags/${{ inputs.tag || github.ref_name }}
+          ref: ${{ github.ref }}
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24
@@ -34,28 +28,29 @@ jobs:
           registry-url: https://registry.npmjs.org/
       - name: Check release identity
         env:
-          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+          RELEASE_TAG: ${{ github.ref_name }}
         run: node scripts/check-release.mjs
       - run: npm install --global npm@11.15.0
-      - run: npm ci
+      # The ESLint dependency has a pnpm-only preinstall; runtime binaries are prebuilt.
+      - run: npm ci --ignore-scripts
       - run: npm run lint
       - run: npm test
+      - run: npm run check:package
       - name: Pack release
         id: pack
         run: echo "file=$(npm pack --ignore-scripts --quiet)" >> "$GITHUB_OUTPUT"
-      - name: Check existing npm version
-        id: registry
-        env:
-          PACKAGE_FILE: ${{ steps.pack.outputs.file }}
-        run: node scripts/check-published.mjs
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: release-package
           path: ${{ steps.pack.outputs.file }}
           if-no-files-found: error
-      - name: Stage package with provenance
+      - name: Check existing npm version
+        id: registry
+        env:
+          PACKAGE_FILE: ${{ steps.pack.outputs.file }}
+        run: node scripts/check-published.mjs
+      - name: Publish with provenance
         if: steps.registry.outputs.exists != 'true'
         env:
           PACKAGE_FILE: ${{ steps.pack.outputs.file }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm stage publish "$PACKAGE_FILE" --access public --provenance
+        run: npm publish "$PACKAGE_FILE" --registry https://registry.npmjs.org/ --access public --tag latest --provenance

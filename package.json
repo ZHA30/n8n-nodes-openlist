@@ -19,7 +19,9 @@
     "build": "n8n-node build",
     "dev": "n8n-node dev",
     "lint": "n8n-node lint",
-    "test": "npm run build && node --test tests/*.test.cjs"
+    "test": "npm run build && node --test tests/*.test.cjs",
+    "lint:fix": "n8n-node lint --fix",
+    "check:package": "node scripts/check-package.mjs"
   },
   "n8n": {
     "n8nNodesApiVersion": 1,
@@ -33,9 +35,9 @@
   },
   "devDependencies": {
     "@n8n/node-cli": "0.56.1",
-    "@types/node": "^22.0.0",
+    "@types/node": "22.20.5",
     "n8n-workflow": "2.47.0",
-    "typescript": "~5.9.3"
+    "typescript": "5.9.3"
   },
   "peerDependencies": {
     "n8n-workflow": "*"
