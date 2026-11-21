@@ -159,17 +159,41 @@ export class OpenList implements INodeType {
             fileName,
           );
           const buffer = await this.helpers.getBinaryDataBuffer(i, field);
-          const result = await api(this, baseUrl, "/fs/put", undefined, {
-            method: "PUT",
-            body: buffer,
-            headers: {
-              "File-Path": path.split("/").map(encodeURIComponent).join("/"),
-              "Content-Type": metadata.mimeType,
-              "Content-Length": buffer.length,
-              Overwrite: String(options.overwrite ?? false),
-              "As-Task": "false",
-            },
-          });
+          const fileHeaders = {
+            "File-Path": path.split("/").map(encodeURIComponent).join("/"),
+            "Content-Type": metadata.mimeType,
+            Overwrite: String(options.overwrite ?? false),
+          };
+          let result: IDataObject;
+          if (this.getNodeParameter("uploadMode", i, "single") === "multipart") {
+            const requestedChunkSize = Number(this.getNodeParameter("chunkSize", i, 10) || 10) * 1024 * 1024;
+            const session = await api(this, baseUrl, "/fs/multipart/init", undefined, {
+              method: "POST",
+              headers: { ...fileHeaders, "X-File-Size": String(buffer.length), "X-Chunk-Size": String(requestedChunkSize) },
+            });
+            const uploadId = String(session.upload_id ?? "");
+            const chunkSize = Number(session.chunk_size);
+            if (!uploadId || !Number.isSafeInteger(chunkSize) || chunkSize < 1)
+              throw new NodeApiError(this.getNode(), { message: "OpenList returned an invalid multipart session" }, { itemIndex: i });
+            for (let index = 0; index * chunkSize < buffer.length; index++) {
+              const chunk = buffer.subarray(index * chunkSize, Math.min((index + 1) * chunkSize, buffer.length));
+              await api(this, baseUrl, "/fs/multipart/chunk", undefined, {
+                method: "PUT",
+                body: chunk,
+                headers: { "X-Upload-Id": uploadId, "X-Chunk-Index": String(index), "Content-Length": chunk.length },
+              });
+            }
+            result = await api(this, baseUrl, "/fs/multipart/complete", undefined, {
+              method: "POST",
+              headers: { "X-Upload-Id": uploadId },
+            });
+          } else {
+            result = await api(this, baseUrl, "/fs/put", undefined, {
+              method: "PUT",
+              body: buffer,
+              headers: { ...fileHeaders, "Content-Length": buffer.length, "As-Task": "false" },
+            });
+          }
           emit({ ...result, path, status: "completed" });
         } else if (operation === "create") {
           const path = posix.join(

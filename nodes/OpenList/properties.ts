@@ -139,6 +139,26 @@ export const properties: INodeProperties[] = [
     description: "Overrides the binary file name when provided",
   },
   {
+    displayName: "Upload Mode",
+    name: "uploadMode",
+    type: "options",
+    options: [
+      { name: "Single Request", value: "single" },
+      { name: "Multipart", value: "multipart" },
+    ],
+    default: "single",
+    displayOptions: show(["upload"]),
+  },
+  {
+    displayName: "Chunk Size (MB)",
+    name: "chunkSize",
+    type: "number",
+    default: 10,
+    typeOptions: { minValue: 1 },
+    displayOptions: { show: { operation: ["upload"], uploadMode: ["multipart"] } },
+    description: "Requested chunk size; OpenList may lower it to its configured maximum",
+  },
+  {
     displayName: "Output Binary Field",
     name: "outputBinaryField",
     type: "string",

@@ -177,6 +177,42 @@ test("upload reads external binary data through helpers and disables overwrite",
   assert.equal(item.json.status, "completed");
 });
 
+test("multipart upload sends bounded chunks then completes the OpenList session", async () => {
+  const ctx = context(
+    {
+      operation: "upload",
+      folderPath: "/docs",
+      inputBinaryField: "source",
+      fileName: "",
+      uploadMode: "multipart",
+      chunkSize: 1,
+      options: {},
+    },
+    (req) => {
+      if (req.url.endsWith("/multipart/init")) {
+        assert.equal(req.method, "POST");
+        assert.equal(req.headers["X-File-Size"], "8");
+        assert.equal(req.headers["X-Chunk-Size"], String(1024 * 1024));
+        return { upload_id: "session-1", chunk_size: 3 };
+      }
+      if (req.url.endsWith("/multipart/chunk")) {
+        assert.equal(req.method, "PUT");
+        assert.equal(req.headers["X-Upload-Id"], "session-1");
+        return null;
+      }
+      assert.ok(req.url.endsWith("/multipart/complete"));
+      assert.equal(req.headers["X-Upload-Id"], "session-1");
+      return { state: "completed" };
+    },
+  );
+  const [[item]] = await new OpenList().execute.call(ctx);
+  assert.equal(item.json.status, "completed");
+  assert.deepEqual(
+    ctx.requests.slice(1, 4).map((request) => [request.headers["X-Chunk-Index"], request.body.toString()]),
+    [["0", "upl"], ["1", "oad"], ["2", "ed"]],
+  );
+});
+
 test("copy retains queued tasks and evaluates expressions for each input", async () => {
   const ctx = context(
     [

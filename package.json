@@ -1,6 +1,6 @@
 {
   "name": "@zha303050/n8n-nodes-openlist",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Work with OpenList files and folders in n8n",
   "license": "MIT",
   "keywords": [
